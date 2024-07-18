@@ -29,8 +29,16 @@ $env.PROMPT_COMMAND = {|| $"($env.PWD | path shrink) "}
 
 # How certain ENVVARS should be converted when passed between nu and other programs
 $env.ENV_CONVERSIONS = {
-  PATH: {
-    from_string: {|s| $s | split row (char esep) | uniq | compact }
+  "PATH": {
+    from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
+    to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
+  }
+  "Path": {
+    from_string: { |s| $s | split row (char esep) | path expand --no-symlink | uniq }
+    to_string: { |v| $v | path expand --no-symlink | uniq | str join (char esep) }
+  }
+  PATHEXT: {
+    from_string: {|s| $s | split row (char esep) }
     to_string: {|v| $v | str join (char esep) }
   }
   CARAPACE_BRIDGES: {
@@ -39,14 +47,34 @@ $env.ENV_CONVERSIONS = {
   }
 }
 
+$env.NU_LIB_DIRS = [
+    ($nu.default-config-dir | path join 'scripts') # add <nushell-config-dir>/scripts
+    ($nu.data-dir | path join 'completions') # default home for nushell completions
+]
+
+$env.NU_PLUGIN_DIRS = [
+    ($nu.default-config-dir | path join 'plugins') # add <nushell-config-dir>/plugins
+]
+
 # Add more directories to $PATH
-$env.PATH = (
-  $env.PATH
-  | prepend '/usr/local/bin'
-  | prepend $"($nu.home-path)/.local/bin"
-  | append $"($nu.home-path)/.nimble/bin"
-  | append $"($nu.home-path)/.cargo/bin"
-)
+use std "path add"
+if $nu.os-info.family == "unix" {
+  path add "/usr/local/bin"
+}
+path add ($nu.home-path | path join ".local" "bin")
+path add -a ($env.NIMBLEDIR? | default ($nu.home-path | path join ".nimble") | path join "bin")
+path add -a ($env.CARGO_HOME? | default ($nu.home-path | path join ".cargo") | path join "bin")
+$env.Path = ($env.Path | uniq)
+
+# Add Powershell files to PATHEXT
+if $nu.os-info.family == "windows" {
+  $env.PATHEXT = (
+    $env.PATHEXT
+    | split row (char esep)
+    | append '.PS1'
+    | uniq
+  )
+}
 
 # Carapace completion setup
 $env.CARAPACE_BRIDGES = ['zsh' 'fish' 'bash' 'inshellisense']
