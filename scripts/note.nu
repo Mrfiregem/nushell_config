@@ -33,6 +33,25 @@ export def rm [id: string@"nu-complete note ids"] {
   list -l | where id != $id | save -f (get-path)
 }
 
+# Remove all expired notes
+export def "rm expired" [] {
+    list -l
+    | where {|n| ($n.due | is-empty) or ($n.due >= (date now)) }
+    | save -f (get-path)
+}
+
+# Import a note table to file
+export def import [
+    --overwrite (-o) # Replace currently stored notes instead of appending
+]: table<id: string, body: string, posted: datetime, due: datetime> -> nothing {
+    let new_notes = $in
+    if $overwrite {
+        $new_notes | save -f (get-path)
+    } else {
+        $new_notes ++ (list -l) | save -f (get-path)
+    }
+}
+
 # Add a note to the file
 export def main [
   --due (-d): datetime
