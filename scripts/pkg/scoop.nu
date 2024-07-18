@@ -30,6 +30,17 @@ export def search [
   }
 }
 
+# Show information for a specific package
+export def info [name: string] {
+    ^pwsh -NoProfile -Command $"scoop info ($name) 6>NUL | ConvertTo-Json"
+    | from json | rename -b { str downcase }
+    | rename -c {'updated at': updated, 'updated by': updater}
+    | into datetime updated
+    | upsert binaries { split row ' | ' }
+    | upsert shortcuts { split row ' | ' }
+    | upsert installed { split row (char nl) }
+}
+
 # === Bucket commands ===
 
 # List installed buckets
