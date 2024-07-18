@@ -1,5 +1,6 @@
 # Import user modules
-use util.nu * # Simple functions that aren't part of any module
+use functions.nu * # Simple functions that aren't part of any module
+use util * # Private functions
 use user.nu # Module to retreive XDG user directories
 use nimble.nu # Nim package manager
 use note.nu # Simple note-taking module
