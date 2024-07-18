@@ -1,3 +1,6 @@
+# === Package data commands ===
+
+# List installed packages
 export def list [query?: string] {
   ^pwsh -NoProfile -Command $"scoop list ($query) 6>NUL | ConvertTo-Json"
   | from json | rename -b { str downcase }
@@ -5,8 +8,37 @@ export def list [query?: string] {
   | into datetime updated
 }
 
-export def search [query?: string] {
-  ^pwsh -NoProfile -Command $"scoop search ($query) 6>NUL | ForEach-Object { Add-Member -Name Version -Value $_.Version.GetString\() -MemberType NoteProperty -InputObject $_ -PassThru -Force } | ConvertTo-Json"
-  | from json | rename -b { str downcase }
-  | move version source binaries --after name
+# Search all known buckets for packages. Uses scoop-search if installed
+export def search [
+  query?: string
+  --force-default (-f) # Use default 'scoop search' even if scoop-search is installed
+] {
+  if ((not $force_default) and (which scoop-search | into record | is-not-empty)) {
+    ^scoop-search.exe $query | lines
+    | split list '' | each { |rw|
+      {
+        source: ($rw.0 | str replace -r `^'(.+)' bucket:$` '$1')
+        pkgs: ($rw | range 1.. | str trim | parse `{name} ({version}){binaries}`)
+      }
+    } | flatten --all pkgs
+    | update binaries { str trim | parse `--> includes '{bin}'` | get bin }
+    | move version source binaries --after name
+  } else {
+    ^pwsh -NoProfile -Command $"scoop search ($query) 6>NUL | ForEach-Object { Add-Member -Name Version -Value $_.Version.GetString\() -MemberType NoteProperty -InputObject $_ -PassThru -Force } | ConvertTo-Json"
+    | from json | rename -b { str downcase }
+    | move version source binaries --after name
+  }
+}
+
+# === Bucket commands ===
+
+# List installed buckets
+export def "bucket list" [] {
+  ^pwsh -NoProfile -Command 'scoop bucket list 6>NUL | ConvertTo-Json'
+  | from json | into value | rename -b { str downcase }
+}
+
+# List buckets known to scoop by name
+export def "bucket known" [] {
+  ^scoop bucket known | collect { lines }
 }
