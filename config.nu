@@ -8,24 +8,25 @@ use meme.nu # Video-downloader
 
 const WINDOWS_CONF = "./os-config/windows.nu"
 const MACOS_CONF = "./os-config/macos.nu"
+const UNIX_CONF = "./os-config/unix.nu"
 const OS_CONFIG = if $nu.os-info.name == "windows" {
-  $WINDOWS_CONF
+    $WINDOWS_CONF
 } else if $nu.os-info.name == "macos" {
-  $MACOS_CONF
+    $MACOS_CONF
 }
 source $OS_CONFIG
 
 $env.config = {
-  show_banner: false
-  buffer_editor: 'nvim'
-  table: {
-    # 'basic' 'compact' 'compact_double' 'default' 'heavy' 'light' 'none' 'reinforced' 'rounded'
-    # 'thin' 'with_love' 'psql' 'markdown' 'dots' 'restructured' 'ascii_rounded' 'basic_compact'
-    mode: 'rounded'
-    index_mode: 'always' # 'auto' 'never' 'always'
-    show_empty: true
-    header_on_separator: false
-  }
+    show_banner: false
+    buffer_editor: 'nvim'
+    table: {
+        # 'basic' 'compact' 'compact_double' 'default' 'heavy' 'light' 'none' 'reinforced' 'rounded'
+        # 'thin' 'with_love' 'psql' 'markdown' 'dots' 'restructured' 'ascii_rounded' 'basic_compact'
+        mode: 'rounded'
+        index_mode: 'always' # 'auto' 'never' 'always'
+        show_empty: true
+        header_on_separator: false
+    }
 }
 
 # Carapace completion setup
