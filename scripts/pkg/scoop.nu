@@ -10,7 +10,7 @@ export def list [query?: string] {
 
 # Search all known buckets for packages. Uses scoop-search if installed
 export def search [
-  query?: string
+  query: string = '' # Package name to search for
   --force-default (-f) # Use default 'scoop search' even if scoop-search is installed
 ] {
   if ((not $force_default) and (which scoop-search | into record | is-not-empty)) {
