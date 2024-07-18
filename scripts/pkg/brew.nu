@@ -13,6 +13,18 @@ export def outdated [] {
     }
 }
 
+# Search for available packages
+export def search [query: string] {
+    let formulae = ^brew search --formula $query | complete
+    let casks = ^brew search --cask $query | complete
+
+    {
+        formula: ($formulae.stdout | lines)
+        cask: ($casks.stdout | lines)
+    } | transpose type name
+    | flatten
+}
+
 # List all installed packages
 export def list [
     --formula (-f) # Only include formulae
