@@ -77,7 +77,15 @@ if $nu.os-info.family == "windows" {
 }
 
 # Carapace completion setup
-$env.CARAPACE_BRIDGES = ['zsh' 'fish' 'bash' 'inshellisense']
+$env.CARAPACE_BRIDGES = [
+    'argcomplete'
+    'bash'
+    'clap'
+    'click'
+    # 'fish'
+    'inshellisense'
+    'zsh'
+]
 
 # Set default text editor
 $env.VISUAL = nvim
