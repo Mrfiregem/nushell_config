@@ -1,8 +1,8 @@
-$env.user_info = (
-    ^id | str replace --all ' ' (char nl)
+use functions.nu unwrap
+
+def id [] {
+    ^id | str replace --all ' ' (char newline)
     | lines | split column '=' key value
-    | update value { split row ',' | parse `{id}({name})` }
-    | update 0.value { into record }
-    | update 1.value { into record }
+    | update value { split row ',' | parse `{id}({name})` | unwrap }
     | transpose -rd
-)
+}

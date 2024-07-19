@@ -55,3 +55,23 @@ export def "into list" []: any -> list<any> {
         return [$input]
     }
 }
+
+# If pipeline contains a list with one item,
+# return that item, otherwise return the pipeline object
+export def unwrap []: [
+    list<any> -> any
+    list<any> -> list<any>
+    list<nothing> -> nothing
+    any -> any
+] {
+    let item = $in
+    if ($item | describe -d).type == 'list' {
+        match ($item | length) {
+            0 => null
+            1 => { $item | first }
+            _ => $item
+        }
+    } else {
+        return $item
+    }
+}
