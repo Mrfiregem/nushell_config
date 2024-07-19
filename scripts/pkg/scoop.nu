@@ -32,13 +32,28 @@ export def search [
 
 # Show information for a specific package
 export def info [name: string] {
-    ^pwsh -NoProfile -Command $"scoop info ($name) 6>NUL | ConvertTo-Json"
+    let cmd = ^pwsh -NoProfile -Command $"scoop info ($name) 6>NUL | ConvertTo-Json" | complete
+
+    if $cmd.exit_code > 0 {
+        error make {
+            msg: $"Couldn't find any results for the package '($name)'"
+            label: {
+                text: "No matches"
+                span: (metadata $name).span
+            }
+            help: "Make sure you've spelled the package name correctly"
+        }
+    }
+
+    $cmd.stdout
     | from json | rename -b { str downcase }
     | rename -c {'updated at': updated, 'updated by': updater}
     | into datetime updated
     | upsert binaries { split row ' | ' }
     | upsert shortcuts { split row ' | ' }
-    | upsert installed { split row (char nl) }
+    | upsert installed { split row (char newline) }
+    | upsert "path added" { split row (char newline) }
+    | rename -c {"path added": paths}
 }
 
 # === Bucket commands ===
