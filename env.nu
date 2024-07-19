@@ -86,6 +86,8 @@ $env.CARAPACE_BRIDGES = [
     'inshellisense'
     'zsh'
 ]
+mkdir ~/.cache/carapace
+carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
 
 # Set default text editor
 $env.VISUAL = nvim
