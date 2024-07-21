@@ -1,10 +1,10 @@
 # Import user modules
 use functions.nu * # Simple functions that aren't part of any module
-use util * # Private functions
-use user.nu # Module to retreive XDG user directories
-use nimble.nu # Nim package manager
-use note.nu # Simple note-taking module
-use meme.nu # Video-downloader
+use listutils * # Functions for working with lists in pipelines
+use private * # Module containing functions that use private data
+use user # Module to retreive XDG user directories
+use pkg * # Various package managers, mostly for programming languages
+use commands *
 
 const WINDOWS_CONF = "./os-config/windows.nu"
 const MACOS_CONF = "./os-config/macos.nu"

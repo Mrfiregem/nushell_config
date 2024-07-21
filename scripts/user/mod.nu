@@ -1,5 +1,3 @@
-# A module to retrieve user directories (i.e. 'videos', 'documents', 'desktop', ...)
-
 # Get a record of all user directories
 export def list []: nothing -> record {
   return {
@@ -63,3 +61,6 @@ export def main [
     }
   }
 }
+
+# A module to retrieve user directories (i.e. 'videos', 'documents', 'desktop', ...)
+export use user/xdg.nu

@@ -1,3 +1,4 @@
+use listutils unwrap
 # === Package data commands ===
 
 # List installed packages
@@ -21,7 +22,7 @@ export def search [
         pkgs: ($rw | range 1.. | str trim | parse `{name} ({version}){binaries}`)
       }
     } | flatten --all pkgs
-    | update binaries { str trim | parse `--> includes '{bin}'` | get bin }
+    | update binaries { str trim | parse `--> includes '{bin}'` | get bin | unwrap }
     | move version source binaries --after name
   } else {
     ^pwsh -NoProfile -Command $"scoop search ($query) 6>NUL | ForEach-Object { Add-Member -Name Version -Value $_.Version.GetString\() -MemberType NoteProperty -InputObject $_ -PassThru -Force } | ConvertTo-Json"
