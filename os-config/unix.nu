@@ -1,4 +1,4 @@
-use functions.nu unwrap
+use listutils unwrap
 
 def id [] {
     ^id | str replace --all ' ' (char newline)
