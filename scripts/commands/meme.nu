@@ -1,4 +1,4 @@
-use user.nu
+use user
 def get-memedir [] { user videos | path join memes }
 
 def needs-remux []: string -> bool {
