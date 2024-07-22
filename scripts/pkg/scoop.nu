@@ -3,32 +3,34 @@ use listutils unwrap
 
 # List installed packages
 export def list [query?: string] {
-  ^pwsh -NoProfile -Command $"scoop list ($query) 6>NUL | ConvertTo-Json"
-  | from json | rename -b { str downcase }
-  | move version source updated info --after name
-  | into datetime updated
+    ^pwsh -NoProfile -Command $"scoop list ($query) 6>NUL | ConvertTo-Json"
+    | from json | rename -b { str downcase }
+    | move version source updated info --after name
+    | into datetime updated
 }
 
 # Search all known buckets for packages. Uses scoop-search if installed
 export def search [
-  query: string = '' # Package name to search for
-  --force-default (-f) # Use default 'scoop search' even if scoop-search is installed
+    query: string = '' # Package name to search for
+    --force-default (-f) # Use default 'scoop search' even if scoop-search is installed
 ] {
-  if ((not $force_default) and (which scoop-search | into record | is-not-empty)) {
-    ^scoop-search.exe $query | lines
-    | split list '' | each { |rw|
-      {
-        source: ($rw.0 | str replace -r `^'(.+)' bucket:$` '$1')
-        pkgs: ($rw | range 1.. | str trim | parse `{name} ({version}){binaries}`)
-      }
-    } | flatten --all pkgs
-    | update binaries { str trim | parse `--> includes '{bin}'` | get bin | unwrap }
-    | move version source binaries --after name
-  } else {
-    ^pwsh -NoProfile -Command $"scoop search ($query) 6>NUL | ForEach-Object { Add-Member -Name Version -Value $_.Version.GetString\() -MemberType NoteProperty -InputObject $_ -PassThru -Force } | ConvertTo-Json"
-    | from json | rename -b { str downcase }
-    | move version source binaries --after name
-  }
+    if ((not $force_default) and (which scoop-search | into record | is-not-empty)) {
+        ^scoop-search.exe $query | lines
+        | str trim | split list '' | each { |lst|
+            {
+                source: ($lst.0 | str replace -r `^'([^']+)' bucket:` `$1`)
+                pkgs: (
+                    $lst | range 1..
+                    | parse -r `(?P<name>\S+) \((?P<version>\S+)\)(?: --> includes '(?P<binaries>[^']+))?`
+                )
+            }
+        } | flatten --all
+        | move source --after version
+    } else {
+        ^pwsh -NoProfile -Command $"scoop search ($query) 6>NUL | ForEach-Object { Add-Member -Name Version -Value $_.Version.GetString\() -MemberType NoteProperty -InputObject $_ -PassThru -Force } | ConvertTo-Json"
+        | from json | rename -b { str downcase }
+        | move version source binaries --after name
+    }
 }
 
 # Show information for a specific package
@@ -61,11 +63,11 @@ export def info [name: string] {
 
 # List installed buckets
 export def "bucket list" [] {
-  ^pwsh -NoProfile -Command 'scoop bucket list 6>NUL | ConvertTo-Json'
-  | from json | into value | rename -b { str downcase }
+    ^pwsh -NoProfile -Command 'scoop bucket list 6>NUL | ConvertTo-Json'
+    | from json | into value | rename -b { str downcase }
 }
 
 # List buckets known to scoop by name
 export def "bucket known" [] {
-  ^scoop bucket known | collect { lines }
+    ^scoop bucket known | collect { lines }
 }
