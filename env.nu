@@ -77,18 +77,28 @@ if $nu.os-info.family == "windows" {
 }
 
 # Carapace completion setup
-$env.CARAPACE_BRIDGES = [
-    'argcomplete'
-    'bash'
-    'clap'
-    'click'
-    # 'fish'
-    'inshellisense'
-    'zsh'
-]
-mkdir ~/.cache/carapace
-carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
+if (which carapace | is-not-empty) {
+    $env.CARAPACE_BRIDGES = [
+        'argcomplete'
+        'bash'
+        'clap'
+        'click'
+        # 'fish'
+        'inshellisense'
+        'zsh'
+    ]
+    mkdir ~/.cache/carapace
+    carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
+}
 
 # Set default text editor
 $env.VISUAL = nvim
 $env.EDITOR = nvim
+
+# Pipx - Python package manager
+if (which pipx | is-not-empty) {
+    $env.PIPX_HOME = ($env.XDG_DATA_HOME | path join 'pipx')
+    $env.PIPX_BIN_DIR = ($env.PIPX_HOME | path join 'bin')
+    $env.PIPX_MAN_DIR = ($env.PIPX_HOME | path join 'man')
+    path add $env.PIPX_BIN_DIR
+}

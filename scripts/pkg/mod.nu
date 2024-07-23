@@ -1,1 +1,2 @@
-export use pkg/nimble.nu
+export use nimble.nu
+export use pipx.nu
