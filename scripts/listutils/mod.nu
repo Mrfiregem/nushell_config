@@ -1,3 +1,3 @@
-export use listutils/lists.nu *
-export use listutils/tables.nu *
-export use listutils/range.nu
+export use lists.nu *
+export use tables.nu *
+export use range.nu
