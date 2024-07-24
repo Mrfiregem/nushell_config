@@ -32,6 +32,8 @@ export def environment [--value(-V): string] {
     }
 }
 
+def "nu-complete pipx installed" [] { (list --short).name }
+
 # Install and execute apps from Python packages
 export extern main [
     --help(-h) # Show help message and exit
@@ -75,7 +77,7 @@ export extern install-all [
 
 # Uninstall injected packages from an existing venv
 export extern uninject [
-    package: string # Name of the existing pipx-managed venv to inject into
+    package: string@"nu-complete pipx installed"  # Name of the existing pipx-managed venv to inject into
     ...dependencies: string # The package names to uninject from the venv
     --help(-h) # Show help message and exit
     --quiet(-q) # Give less output
@@ -85,7 +87,7 @@ export extern uninject [
 
 # Install packages into an existing venv
 export extern inject [
-    package: string # Name of the existing pipx-managed venv to inject into
+    package: string@"nu-complete pipx installed" # Name of the existing pipx-managed venv to inject into
     ...dependencies: string # The packages to inject into the venv (name or pip package spec)
     --help(-h) # Show help message and exit
     --quiet(-q) # Give less output
@@ -103,7 +105,7 @@ export extern inject [
 
 # Upgrade a package
 export extern upgrade [
-    ...packages: string # Package names(s) to upgrade
+    ...packages: string@"nu-complete pipx installed" # Package names(s) to upgrade
     --help(-h) # Show help message and exit
     --quiet(-q) # Give less output
     --verbose(-v) # Give more output
@@ -123,7 +125,7 @@ export extern upgrade-all [
     --quiet(-q) # Give less output
     --verbose(-v) # Give more output
     --include-injected # Also upgrade packages injected into the main app's environment
-    --skip: string # Skip these packages
+    --skip: string@"nu-complete pipx installed" # Skip these packages
     --force(-f) # Modify existing venv and files
 ]
 
@@ -137,7 +139,7 @@ export extern upgrade-shared [
 
 # Uninstall a package
 export extern uninstall [
-    package: string # Package name
+    package: string@"nu-complete pipx installed" # Package name
     --help(-h) # Show help message and exit
     --quiet(-q) # Give less output
     --verbose(-v) # Give more output
@@ -152,6 +154,7 @@ export extern uninstall-all [
 
 # Reinstall a package
 export extern reinstall [
+    package: string@"nu-complete pipx installed" # Package name
     --help(-h) # Show help message and exit
     --quiet(-q) # Give less output
     --verbose(-v) # Give more output
@@ -166,7 +169,7 @@ export extern reinstall-all [
     --verbose(-v) # Give more output
     --python: string # Python to install with
     --fetch-missing-python # fetch a standalone python build from GitHub if the specified python version is not found
-    --skip: string # Skip these packages
+    --skip: string@"nu-complete pipx installed" # Skip these packages
 ]
 
 # Interact with interpreters managed by pipx
@@ -212,7 +215,7 @@ export extern run [
 
 # Run pip in an existing pipx-managed venv
 export extern runpip [
-    package: string # Name of the existing pipx-managed venv to run pip in
+    package: string@"nu-complete pipx installed" # Name of the existing pipx-managed venv to run pip in
     ...pipargs: string # Arguments to forward to pip command
     --help(-h) # Show help message and exit
     --quiet(-q) # Give less output
