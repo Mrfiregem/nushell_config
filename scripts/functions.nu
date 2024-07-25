@@ -1,7 +1,6 @@
 # Take path elements, join them, then cd to the resulting path
 export def --env cdl [...rest: string] {
-    let pre = $in
-    cd ($pre | append $rest | path join)
+    cd ($in | append $rest | path join)
 }
 
 # Create, then immediately open, a new directory
@@ -10,8 +9,13 @@ export def --env mkcd [path: string] {
     cd $path
 }
 
+# Rename a file using brace expansion
+export def rname [expansion: string] { mv ...($expansion | str expand --path) }
+
 # Open a random file in the specified path. Useful for media directories
-export def "start random" [path: string] {
-    ls $path | where type == file
-    | shuffle | first | start $in.name
+export def "start random" [path: path = .] {
+    let file = ls $path -f | where type == file | shuffle | first
+    print "Opening file:"
+    print $file
+    start $file.name
 }
