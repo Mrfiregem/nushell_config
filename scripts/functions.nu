@@ -6,6 +6,15 @@ export def --env cdl [...rest: string] {
     cd ($in | append $rest | path join)
 }
 
+# Convert cells containing empty '', [], {} into nothing
+export def nullify [...columns: string] {
+    if ($columns | length) > 0 {
+        $in | update cells -c $columns {|v| if ($v | is-empty) { null } else { $v } }
+    } else {
+        $in | update cells {|v| if ($v | is-empty) { null } else { $v } }
+    }
+}
+
 # Create, then immediately open, a new directory
 export def --env mkcd [path: string] {
     mkdir $path
