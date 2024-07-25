@@ -4,6 +4,7 @@ use listutils/tables.nu "compact column"
 
 export use alias.nu
 export use bucket.nu
+export use cache.nu
 
 # List installed packages
 export def list [query?: string] {
