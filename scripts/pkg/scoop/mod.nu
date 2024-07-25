@@ -1,5 +1,9 @@
-use listutils unwrap
+use listutils/tables.nu "compact column"
+
 # === Package data commands ===
+
+export use alias.nu
+export use bucket.nu
 
 # List installed packages
 export def list [query?: string] {
@@ -27,9 +31,18 @@ export def search [
         } | flatten --all
         | move source --after version
     } else {
-        ^pwsh -NoProfile -Command $"scoop search ($query) 6>NUL | ForEach-Object { Add-Member -Name Version -Value $_.Version.GetString\() -MemberType NoteProperty -InputObject $_ -PassThru -Force } | ConvertTo-Json"
+        let cmd = [
+            $"scoop search ($query) 6>$null",
+            'ForEach-Object {
+                Add-Member -Name Version -Value $_.Version.GetString() `
+                -MemberType NoteProperty -InputObject $_ -PassThru -Force
+            }',
+            'ConvertTo-Json'
+        ]
+        ^pwsh -NoProfile -Command ($cmd | str join ' | ')
         | from json | rename -b { str downcase }
         | move version source binaries --after name
+        | update binaries { split row ' | ' | compact -e }
     }
 }
 
@@ -57,17 +70,12 @@ export def info [name: string] {
     | upsert installed { split row (char newline) }
     | upsert "path added" { split row (char newline) }
     | rename -c {"path added": paths}
+    | compact column -e
 }
 
-# === Bucket commands ===
-
-# List installed buckets
-export def "bucket list" [] {
-    ^pwsh -NoProfile -Command 'scoop bucket list 6>NUL | ConvertTo-Json'
-    | from json | into value | rename -b { str downcase }
-}
-
-# List buckets known to scoop by name
-export def "bucket known" [] {
-    ^scoop bucket known | collect { lines }
+# === Alias command ===
+# Completer for `help` subcommand
+def "nu-complete scoop commands" [] {
+    ^pwsh -NoProfile -Command 'scoop help 6>$null | ConvertTo-Json'
+    | from json | get Command
 }

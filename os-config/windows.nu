@@ -1,5 +1,5 @@
 use pkg/winget.nu
-use pkg/scoop.nu
+use pkg/scoop
 
 def id [--long (-l)] {
     let cmd = ^whoami /ALL /FO CSV | complete
