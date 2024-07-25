@@ -1,3 +1,6 @@
+# Open the config directory in lazygit
+export def "config git" [] { lazygit --path $nu.default-config-dir }
+
 # Take path elements, join them, then cd to the resulting path
 export def --env cdl [...rest: string] {
     cd ($in | append $rest | path join)
