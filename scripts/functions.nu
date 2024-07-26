@@ -31,3 +31,15 @@ export def "start random" [path: path = .] {
     print $file
     start $file.name
 }
+
+# "update cells" but for records
+export def "update items" [
+    closure: closure
+    --columns(-c): list<string>
+]: record -> record {
+    if ($columns | is-not-empty) {
+        update cells --columns $columns $closure | first
+    } else {
+        update cells $closure | first
+    }
+}
