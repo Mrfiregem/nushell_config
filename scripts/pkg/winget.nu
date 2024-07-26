@@ -21,22 +21,31 @@ export def list [--upgradable (-u)] {
 }
 
 # Search for available packages matching your query
-export def search [query: string] {
-    let out = (
-        ^pwsh -NoProfile -Command $"Find-WinGetPackage -Query ($query) | ConvertTo-Json"
-        | decode utf-8
-        | from json
-    )
-
-    if ($out | is-empty) {
-        return {}
-    } else {
-        $out
-        | rename -b { str downcase }
-        | move version id source --after name
-        | reject isupdateavailable availableversions
-        | update version {
-            match $in { "Unknown" => { null }, _ => { $in } }
+export def search [...query: string] {
+    # Exit if no query provided
+    if ($query | is-empty) {
+        error make {
+            msg: 'Missing search query'
+            label: {text: 'Expected value', span: (metadata $query).span}
         }
     }
+
+    # Collect json output from Powershell module
+    let cmd = [
+        $"Find-WingetPackage -Query ($query | str join ',') 6>$null"
+        'ConvertTo-Json'
+    ]
+    let out = ^pwsh -NoProfile -Command ($cmd | str join ' | ') | complete
+
+    # If there's no output, return an empty list
+    if ($out.stdout | is-empty) {
+        return []
+    }
+
+    # Otherwise, return a table
+    $out.stdout | decode utf-8 | from json
+    | rename -b { str downcase }
+    | move version id source --after name
+    | reject isupdateavailable availableversions
+    | update version { if $in == "Unknown" { null } else { $in } }
 }
