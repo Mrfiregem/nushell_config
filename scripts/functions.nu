@@ -43,3 +43,6 @@ export def "update items" [
         update cells $closure | first
     }
 }
+
+# Output tables similar to Powershell's "Format-List"
+export def out-list []: any -> nothing { each { print } | ignore }
