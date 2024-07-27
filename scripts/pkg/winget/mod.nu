@@ -13,3 +13,4 @@ export extern main [
 
 export use search.nu
 export use list.nu
+export use show.nu
