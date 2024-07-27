@@ -1,9 +1,7 @@
-# Import user modules
+# Import helpful custom functions
 use functions.nu * # Simple functions that aren't part of any module
 use listutils * # Functions for working with lists in pipelines
-use private * # Module containing functions that use private data
 use user # Module to retreive XDG user directories
-use pkg * # Various package managers, mostly for programming languages
 use commands *
 
 const WINDOWS_CONF = "./os-config/windows.nu"
@@ -15,6 +13,9 @@ const OS_CONFIG = if $nu.os-info.name == "windows" {
     $MACOS_CONF
 }
 source $OS_CONFIG
+
+alias :o = overlay use
+alias :h = overlay hide
 
 $env.config = {
     show_banner: false
@@ -28,6 +29,3 @@ $env.config = {
         header_on_separator: false
     }
 }
-
-# Carapace completion setup
-source ~/.cache/carapace/init.nu

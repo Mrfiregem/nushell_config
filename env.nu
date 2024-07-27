@@ -1,3 +1,5 @@
+use std "path add"
+
 # Fish-style path shortening
 def "path shrink" [] {
     # Split input path into listlet parts = $in | str replace
@@ -56,16 +58,6 @@ $env.NU_PLUGIN_DIRS = [
     ($nu.default-config-dir | path join 'plugins') # add <nushell-config-dir>/plugins
 ]
 
-# Add more directories to $PATH
-use std "path add"
-if $nu.os-info.family == "unix" {
-    path add "/usr/local/bin"
-}
-path add ($nu.home-path | path join ".local" "bin")
-path add -a ($env.NIMBLEDIR? | default ($nu.home-path | path join ".nimble") | path join "bin")
-path add -a ($env.CARGO_HOME? | default ($nu.home-path | path join ".cargo") | path join "bin")
-$env.Path = ($env.Path | uniq)
-
 # Add Powershell files to PATHEXT
 if $nu.os-info.family == "windows" {
     $env.PATHEXT = (
@@ -76,29 +68,27 @@ if $nu.os-info.family == "windows" {
     )
 }
 
-# Carapace completion setup
-if (which carapace | is-not-empty) {
-    $env.CARAPACE_BRIDGES = [
-        'argcomplete'
-        'bash'
-        'clap'
-        'click'
-        # 'fish'
-        'inshellisense'
-        'zsh'
-    ]
-    mkdir ~/.cache/carapace
-    carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
-}
-
 # Set default text editor
 $env.VISUAL = nvim
 $env.EDITOR = nvim
 
-# Pipx - Python package manager
-if (which pipx | is-not-empty) {
-    $env.PIPX_HOME = ($env.XDG_DATA_HOME | path join 'pipx')
-    $env.PIPX_BIN_DIR = ($env.PIPX_HOME | path join 'bin')
-    $env.PIPX_MAN_DIR = ($env.PIPX_HOME | path join 'man')
-    path add $env.PIPX_BIN_DIR
-}
+# Add more directories to $PATH
+if $nu.os-info.family == "unix" { path add "/usr/local/bin" }
+path add ($nu.home-path | path join ".local" "bin")
+
+# Cleanup home directory
+# - Rust
+$env.RUSTUP_HOME = ($env.XDG_DATA_HOME | path join rustup)
+$env.CARGO_HOME = ($env.XDG_DATA_HOME | path join cargo)
+path add --append ($env.CARGO_HOME | path join bin)
+# - Nim
+$env.NIMBLEDIR = ($env.XDG_DATA_HOME | path join nimble)
+path add --append ($env.NIMBLEDIR | path join bin)
+# - Pipx - Python package manager
+$env.PIPX_HOME = ($env.XDG_DATA_HOME | path join 'pipx')
+$env.PIPX_BIN_DIR = ($env.PIPX_HOME | path join 'bin')
+$env.PIPX_MAN_DIR = ($env.PIPX_HOME | path join 'man')
+path add --append $env.PIPX_BIN_DIR
+
+# Deduplicate path entries
+$env.Path = ($env.Path | uniq)
