@@ -6,7 +6,6 @@ use commands *
 
 const WINDOWS_CONF = "./os-config/windows.nu"
 const MACOS_CONF = "./os-config/macos.nu"
-const UNIX_CONF = "./os-config/unix.nu"
 const OS_CONFIG = if $nu.os-info.name == "windows" {
     $WINDOWS_CONF
 } else if $nu.os-info.name == "macos" {
