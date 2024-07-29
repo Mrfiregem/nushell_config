@@ -1,34 +1,30 @@
 export def main [
     id: string # ID of the package to view
+    --short (-s) # Show brief information
 ] {
     let cmd = ^winget show -e --id $id | complete
 
     if $cmd.exit_code > 0 {
         print --stderr "Error running `winget show`"
-        error make -u {msg: $cmd.stderr}
+        error make -u {msg: $cmd.stderr, help: "Make sure the ID is correct"}
     }
 
-    if ($cmd.exit_code > 0) or ($cmd.stdout | str trim | is-empty) {
+    if ($cmd.stdout | str trim | is-empty) {
         return {}
     }
 
     $cmd.stdout
-    | lines | skip 1 |str join (char nl)
-    | from yaml
-    | rename -b { str downcase }
-    | update installer {
-        rename -b { str downcase }
-        | rename -c {
-            'installer type': 'type'
-            'installer locale': 'locale'
-            'installer url': 'url'
-            'installer sha256': 'sha256'
-            'release date': 'released'
-            'offline distribution supported': 'supportsOffline'
-        } | into datetime released
-    } | rename -c {
-        moniker: 'name'
-        'release notes url': 'notes'
-    } | select name publisher version license homepage notes tags installer
-    | update tags { split row ' ' }
+    | str replace -ma '^([\w\s]+:)' $"(char nul)\n$1"
+    | lines | str trim
+    | skip until {|s| $s =~ '^\w'}
+    | split list (char nul)
+    | each { str join (char nul) }
+    | parse -r `(?P<key>[^:]+):\s*(?P<value>.*)`
+    | update value { str replace --all (char nul) (char nl) }
+    | str trim | str snake-case key
+    | where {|it| $it.value | is-not-empty }
+    | transpose -r | into value | into record
+    | if 'tags' in ($in | columns) { update tags { lines } } else {}
+    | if 'description' in ($in | columns) { update description { str replace --all (char nl) ' ' } } else {}
+    | if $short { select -i moniker version description homepage license } else {}
 }
