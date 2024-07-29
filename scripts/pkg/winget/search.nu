@@ -1,28 +1,53 @@
+# Search all available packages for your query
 export def main [
     query: string # The text to search
-    --ensure-contains(-e) # Ensure each result contains the query exactly
-    --no-split(-n) # Don't split the query into seperate words during search
+    --id          # Filter results by id
+    --name        # Filter results by name
+    --moniker     # Filter results by moniker
+    --tag         # Filter results by tag
 ] {
-    let response = (
-        {
-            scheme: https
-            host: api.winget.run
-            path: /v2/packages
-            query: (
-                {
-                    query: $query
-                    ensureContains: (if $ensure_contains { 'true' } else { 'false' })
-                    splitQuery: (if $no_split { 'false' } else { 'true' })
-                } | url build-query
-            )
-        } | url join
-        | http get $in
-    )
+    # Determine if more than one flag is set
+    if ([$id $name $moniker $tag] | where {|bool| $bool} | length) > 1 {
+        error make -u {msg: 'Flags are mutually exclusive'}
+    }
 
-    if $response.Total == 0 { return [] }
+    # Arguments for the Select-Object command
+    let search_flags = if $id {
+        '-Id'
+    } else if $name {
+        '-Name'
+    } else if $moniker {
+        '-Moniker'
+    } else if $tag {
+        '-Tag'
+    } else {
+        []
+    } | append $query
 
-    $response.Packages | flatten Latest
-    | rename -b { str downcase }
-    | insert version { get versions | first }
-    | select name id version description
+
+    let selectobj_list = [
+        # This is needed since direct conversion results in decode errors for some reason
+        `@{name='Name'; expr={[Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($_.Name))}}`
+        Id
+        Version
+        Source
+    ] | str join ', '
+
+    let cmdline = [
+        $'Find-WinGetPackage ($search_flags | str join " ")'
+        $'Select-Object -Property ($selectobj_list)'
+        'ConvertTo-Json'
+    ] | str join ' | '
+
+    let cmd = ^pwsh -NoProfile -Command $cmdline | complete
+    if ($cmd.exit_code > 0) or ($cmd.stderr | is-not-empty) {
+        error make -u {msg: "Error running 'winget search'"}
+    }
+
+    if ($cmd.stdout | is-empty) { return [] }
+    
+    $cmd.stdout | from json
+    | rename -b { str snake-case }
+    # Decode the encoded name to bypass conversion error
+    | update name { decode base64 --binary | decode }
 }
