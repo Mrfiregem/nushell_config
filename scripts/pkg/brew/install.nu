@@ -1,0 +1,51 @@
+# Install a formula or cask
+export extern main [
+    ...name: string # Formulae or casks to install
+    --debug(-d) # If brewing fails, open an interactive debugging session
+    --display-times # Print install times for each package at the end
+    --force(-f) # Install formulae without checking for previously installed keg-only or non-migrated versions
+    --verbose(-v) # Print verification and post-install steps
+    --dry-run(-n) # Show what would be installed, but do not actually install anything
+    --formula # Treat all named arguments as formulae
+    --only-dependencies # Install the  but do not install the formula itself
+    --cc: string # Attempt to compile using the specified compiler
+    --build-from-source(-s) # Compile formula from source even if a bottle is provided
+    --force-bottle # Install from a bottle if it exists
+    --include-test # Install testing dependencies required to run `brew test 'formula'`
+    --HEAD # If formula defines it, install the HEAD version
+    --fetch-HEAD # Fetch the upstream repository to detect if HEAD is outdated
+    --keep-tmp # Retain temporary files
+    --debug-symbols # Generate debug symbols on build
+    --build-bottle # Prepare the formula for eventual bottling. Skip post-install steps
+    --skip-post-install # Install but skip any post-install steps
+    --bottle-arch # Optimise bottles for the specified architecture rather than the oldest
+    --interactive(-i) # Download and patch formula, then open a shell
+    --git(-g) # Create a Git repository
+    --overwrite # Delete files that already exist in the prefix while linking
+    --cask # Treat all named arguments as casks
+    --binaries # Enable linking of helper executables (default)
+    --no-binaries # Disable linking of helper executables
+    --require-sha # Require all casks to have a checksum
+    --quarantine # Enable quarantining of downloads (default)
+    --no-quarantine # Disable quarantining of downloads
+    --adopt # Adopt existing artifacts in the destination that are identical to those being installed
+    --skip-cask-deps # Skip installing cask dependencies
+    --appdir: path # Target location for Applications
+    --keyboard-layoutdir: path # Target location for Keyboard Layouts
+    --colorpickerdir: path # Target location for Color Pickers
+    --prefpanedir: path # Target location for Preference Panes
+    --qlplugindir: path # Target location for Quick Look Plugins
+    --mdimporterdir: path # Target location for Spotlight Plugins
+    --dictionarydir: path # Target location for Dictionaries
+    --fontdir: path # Target location for Fonts
+    --servicedir: path # Target location for Services
+    --input-methoddir: path # Target location for Input Methods
+    --internet-plugindir: path # Target location for Internet Plugins
+    --audio-unit-plugindir: path # Target location for Audio Unit Plugins
+    --vst-plugindir: path # Target location for VST Plugins
+    --vst3-plugindir: path # Target location for VST3 Plugins
+    --screen-saverdir: path # Target location for Screen Savers
+    --language: string # Comma-separated list of language codes to prefer for cask installation
+    --quiet(-q) # Make some output more quiet
+    --help(-h) # Show the help message
+]
