@@ -1,11 +1,6 @@
 # Wraps any non-list pipeline input into a list
 export def "into list" []: any -> list<any> {
-    let input = $in
-    if ($input | describe -d).type == 'list' {
-        return $input
-    } else {
-        return [$input]
-    }
+    if ($in | describe -d).type != 'list' { append [] } else {}
 }
 
 # If pipeline contains a list with one item,

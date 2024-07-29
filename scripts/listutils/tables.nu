@@ -1,4 +1,3 @@
-use listutils/lists.nu "into list"
 # Creates a table with non-empty columns.
 export def "compact column" [
     --empty (-e) # Also compact empty items like "", {}, and []
