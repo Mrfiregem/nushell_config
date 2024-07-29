@@ -5,6 +5,7 @@ export def main [
     --name        # Filter results by name
     --moniker     # Filter results by moniker
     --tag         # Filter results by tag
+    --long (-l)   # Show all available fields
 ] {
     # Determine if more than one flag is set
     if ([$id $name $moniker $tag] | where {|bool| $bool} | length) > 1 {
@@ -26,8 +27,7 @@ export def main [
 
 
     let selectobj_list = [
-        # This is needed since direct conversion results in decode errors for some reason
-        `@{name='Name'; expr={[Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($_.Name))}}`
+        Name
         Id
         Version
         Source
@@ -35,19 +35,24 @@ export def main [
 
     let cmdline = [
         $'Find-WinGetPackage ($search_flags | str join " ")'
-        $'Select-Object -Property ($selectobj_list)'
         'ConvertTo-Json'
     ] | str join ' | '
 
-    let cmd = ^pwsh -NoProfile -Command $cmdline | complete
+    let pwsh_cmds = [
+            '[Console]::OutputEncoding = [Text.Encoding]::UTF8'
+            $cmdline
+    ] | str join '; '
+
+    let cmd = ^pwsh -NoProfile -Command $pwsh_cmds | complete
     if ($cmd.exit_code > 0) or ($cmd.stderr | is-not-empty) {
         error make -u {msg: "Error running 'winget search'"}
     }
 
     if ($cmd.stdout | is-empty) { return [] }
     
-    $cmd.stdout | from json
+    $cmd.stdout
+    | from json
     | rename -b { str snake-case }
-    # Decode the encoded name to bypass conversion error
-    | update name { decode base64 --binary | decode }
+    | move id version source is_update_available available_versions --after name
+    | if not $long { select name id version source } else {}
 }
