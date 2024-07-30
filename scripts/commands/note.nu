@@ -1,3 +1,5 @@
+# A simple, single-file note taker written in Nu
+
 # Get path to note file
 def get-path [] { $nu.data-dir | path join 'note' 'notes.json' }
 

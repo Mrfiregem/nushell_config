@@ -1,8 +1,16 @@
+# Define aliases
+#
+# Overlays
+alias ':o' = overlay use
+alias ':op' = overlay use --prefix
+alias ':h' = overlay hide
+alias ':l' = overlay list
+
 # Import helpful custom functions
-use functions.nu * # Simple functions that aren't part of any module
-use listutils * # Functions for working with lists in pipelines
-use user # Module to retreive XDG user directories
-use commands *
+:o functions.nu # Simple functions that aren't part of any module
+:o listutils # Functions for working with lists in pipelines
+:op user # Module to retreive XDG user directories
+:o commands # A module containing cutom commands including a note taker
 
 const WINDOWS_CONF = "./os-config/windows.nu"
 const MACOS_CONF = "./os-config/macos.nu"
@@ -12,11 +20,6 @@ const OS_CONFIG = if $nu.os-info.name == "windows" {
     $MACOS_CONF
 }
 source $OS_CONFIG
-
-alias :o = overlay use
-alias :op = overlay use --prefix
-alias :h = overlay hide
-alias :l = overlay list
 
 $env.config = {
     show_banner: false
