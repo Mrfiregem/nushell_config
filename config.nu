@@ -14,7 +14,9 @@ const OS_CONFIG = if $nu.os-info.name == "windows" {
 source $OS_CONFIG
 
 alias :o = overlay use
+alias :op = overlay use --prefix
 alias :h = overlay hide
+alias :l = overlay list
 
 $env.config = {
     show_banner: false
@@ -27,4 +29,15 @@ $env.config = {
         show_empty: true
         header_on_separator: false
     }
+}
+
+def "cargo list" [] {
+    ^cargo install --list
+    | str replace -ma `(.*:)$` "\n$1"
+    | lines | split list ''
+    | each {|lst|
+        $lst.0
+        | parse `{name} v{version}:`
+        | insert binaries { $lst | range 1.. | str trim }
+    } | flatten
 }
