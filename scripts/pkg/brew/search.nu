@@ -1,5 +1,10 @@
 use std null-device
+
+# Search for a package by text or regex
 export def main [query: string] {
-    ^brew search --formula $query e> (null-device) | lines | each {|n| {type: formula, name: $n}}
-    | append (^brew search --cask $query e> (null-device) | lines | each {|n| {type: cask, name: $n}})
+    [formula cask] | each { |s|
+        ^brew search $'--($s)' $query e> (null-device)
+        | lines | wrap name
+        | insert type { $s }
+    } | flatten
 }
