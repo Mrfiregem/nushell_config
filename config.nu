@@ -1,5 +1,30 @@
+# Function to get platform specific empty file (i.e. /dev/null)
+use std null-device
+
+# Load platform-specific config
+const OS_CONFIG = if $nu.os-info.name == "windows" {
+    $"($nu.default-config-dir)/os-config/windows.nu"
+} else if $nu.os-info.name == "macos" {
+    $"($nu.default-config-dir)/os-config/macos.nu"
+} else {
+    null-device
+}
+# Must be outside of a block because source is scoped for some reason
+source $OS_CONFIG
+
+# List installed cargo binary packages
+def "cargo list" [] {
+    ^cargo install --list
+    | str replace -ma `(.*:)$` "\n$1"
+    | lines | split list ''
+    | par-each {|lst|
+        $lst.0
+        | parse `{name} v{version}:`
+        | insert binaries { $lst | range 1.. | str trim }
+    } | flatten
+}
+
 # Define aliases
-#
 # Overlays
 alias ':o' = overlay use
 alias ':op' = overlay use --prefix
@@ -7,19 +32,10 @@ alias ':h' = overlay hide
 alias ':l' = overlay list
 
 # Import helpful custom functions
-:o functions.nu # Simple functions that aren't part of any module
-:o listutils # Functions for working with lists in pipelines
-:op user # Module to retreive XDG user directories
-:o commands # A module containing cutom commands including a note taker
-
-const WINDOWS_CONF = "./os-config/windows.nu"
-const MACOS_CONF = "./os-config/macos.nu"
-const OS_CONFIG = if $nu.os-info.name == "windows" {
-    $WINDOWS_CONF
-} else if $nu.os-info.name == "macos" {
-    $MACOS_CONF
-}
-source $OS_CONFIG
+overlay use functions.nu # Simple functions that aren't part of any module
+overlay use listutils # Functions for working with lists in pipelines
+overlay use --prefix user # Module to retreive XDG user directories
+overlay use commands # A module containing cutom commands including a note taker
 
 $env.config = {
     show_banner: false
@@ -29,7 +45,7 @@ $env.config = {
         # 'thin' 'with_love' 'psql' 'markdown' 'dots' 'restructured' 'ascii_rounded' 'basic_compact'
         mode: 'rounded'
         index_mode: 'always' # 'auto' 'never' 'always'
-        show_empty: true
+        show_empty: true # Show representations of empty lists and records
         header_on_separator: false
     }
 }
