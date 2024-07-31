@@ -33,14 +33,3 @@ $env.config = {
         header_on_separator: false
     }
 }
-
-def "cargo list" [] {
-    ^cargo install --list
-    | str replace -ma `(.*:)$` "\n$1"
-    | lines | split list ''
-    | each {|lst|
-        $lst.0
-        | parse `{name} v{version}:`
-        | insert binaries { $lst | range 1.. | str trim }
-    } | flatten
-}
