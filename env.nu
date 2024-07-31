@@ -39,11 +39,11 @@ $env.ENV_CONVERSIONS = {
         from_string: { |s| $s | split row (char esep) | path expand --no-symlink | uniq }
         to_string: { |v| $v | path expand --no-symlink | uniq | str join (char esep) }
     }
-    PATHEXT: {
+    "PATHEXT": {
         from_string: {|s| $s | split row (char esep) }
         to_string: {|v| $v | str join (char esep) }
     }
-    CARAPACE_BRIDGES: {
+    "CARAPACE_BRIDGES": {
         from_string: {|s| $s | split row ',' }
         to_string: {|v| $v | str join ',' }
     }
@@ -73,7 +73,7 @@ $env.VISUAL = nvim
 $env.EDITOR = nvim
 
 # Add more directories to $PATH
-if $nu.os-info.family == "unix" { path add "/usr/local/bin" }
+if $nu.os-info.family == "unix" { path add "/usr/local/bin" "/usr/local/sbin" }
 path add ($nu.home-path | path join ".local" "bin")
 
 # Cleanup home directory
