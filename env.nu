@@ -82,8 +82,8 @@ $env.RUSTUP_HOME = ($env.XDG_DATA_HOME | path join rustup)
 $env.CARGO_HOME = ($env.XDG_DATA_HOME | path join cargo)
 path add --append ($env.CARGO_HOME | path join bin)
 # - Nim
-$env.NIMBLEDIR = ($env.XDG_DATA_HOME | path join nimble)
-path add --append ($env.NIMBLEDIR | path join bin)
+$env.NIMBLE_DIR = ($env.XDG_DATA_HOME | path join nimble)
+path add --append ($env.NIMBLE_DIR | path join bin)
 # - Pipx - Python package manager
 $env.PIPX_HOME = ($env.XDG_DATA_HOME | path join 'pipx')
 $env.PIPX_BIN_DIR = ($env.PIPX_HOME | path join 'bin')
