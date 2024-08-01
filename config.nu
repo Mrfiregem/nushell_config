@@ -1,14 +1,5 @@
-# List installed cargo binary packages
-def "cargo list" [] {
-    ^cargo install --list
-    | str replace -ma `(.*:)$` "\n$1"
-    | lines | split list ''
-    | par-each {|lst|
-        $lst.0
-        | parse `{name} v{version}:`
-        | insert binaries { $lst | range 1.. | str trim }
-    } | flatten
-}
+# Load custom functions for non-platform-specific package managers
+overlay use pkg
 
 # Define aliases
 
