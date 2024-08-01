@@ -13,3 +13,6 @@ let uutil_path = $"(^brew --prefix)/opt/uutils-coreutils/libexec/uubin"
 if ($uutil_path | path exists) {
     $env.PATH = ($env.PATH | split row (char esep) | prepend $uutil_path)
 }
+
+# Load unix config, too
+source unix.nu
