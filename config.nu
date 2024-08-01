@@ -1,17 +1,3 @@
-# Function to get platform specific empty file (i.e. /dev/null)
-use std null-device
-
-# Load platform-specific config
-const OS_CONFIG = if $nu.os-info.name == "windows" {
-    $"($nu.default-config-dir)/os-config/windows.nu"
-} else if $nu.os-info.name == "macos" {
-    $"($nu.default-config-dir)/os-config/macos.nu"
-} else {
-    null-device
-}
-# Must be outside of a block because source is scoped for some reason
-source $OS_CONFIG
-
 # List installed cargo binary packages
 def "cargo list" [] {
     ^cargo install --list
@@ -49,3 +35,14 @@ $env.config = {
         header_on_separator: false
     }
 }
+
+# Load platform-specific config
+const OS_CONFIG = if $nu.os-info.name == "windows" {
+    'os-config/windows.nu'
+} else if $nu.os-info.name == "macos" {
+    'os-config/macos.nu'
+} else {
+    'os-congig/unix.nu'
+}
+# Must be outside of a block because source is scoped for some reason
+source $OS_CONFIG
