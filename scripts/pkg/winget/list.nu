@@ -22,7 +22,8 @@ def upgradable [] {
 }
 
 export def main [
-    --upgrade-available(-u)
+    --all(-a) # Show apps that aren't managed by winget
+    --upgrade-available(-u) # Show apps with a newer version
 ] {
     if $upgrade_available {
         return (upgradable)
@@ -50,5 +51,6 @@ export def main [
 
         $cmd.stdout | from json
         | rename -b { str downcase }
+        | if not $all { where source != null } else {}
     }
-} 
+}
