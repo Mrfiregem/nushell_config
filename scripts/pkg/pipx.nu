@@ -1,4 +1,38 @@
-# Search package names
+# Get package info from pypi.org
+export def info [
+    package: string # Name of the package to query
+    --full # Return full API response
+    --error # If a package isn't found, throw an error
+] {
+    let rejections = [
+        description
+        description_content_type
+        license
+        downloads
+    ]
+    try {
+        http get $'https://pypi.org/pypi/($package | url encode)/json'
+        | if not $full {
+            get info
+            | reject ...$rejections
+        } else {}
+    } catch {
+        if $error {
+            error make {
+                msg: "Error retreiving package information"
+                label: {
+                    text: "Make sure package name is correctly spelt"
+                    span: (metadata $package).span
+                }
+                help: "Try `pipx search <package>` to make sure it exists"
+            }
+        } else {
+            return {}
+        }
+    }
+}
+
+# Search pypi for package names
 export def search [
     query: string # Pattern to compare names to
     --exact(-e) # Find exact match rather than substring
