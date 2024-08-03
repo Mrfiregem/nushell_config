@@ -1,3 +1,21 @@
+# Search package names
+export def search [
+    query: string # Pattern to compare names to
+    --exact(-e) # Find exact match rather than substring
+] {
+    http get 'https://pypi.org/simple/'
+    | lines
+    | filter {|s| $s | str starts-with '<a' }
+    | polars into-df
+    | polars rename '0' 'name'
+    | polars replace -p `^<a href=".*">(.*)</a>` -r '$1'
+    | if $exact {
+        polars filter-with ((polars col name) == $query)
+    } else {
+        polars filter-with ($in | polars contains $query)
+    } | polars into-nu
+}
+
 # List installed packages
 export def list [--short(-s)] {
     if $short {
