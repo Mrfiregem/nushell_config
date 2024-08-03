@@ -92,3 +92,7 @@ path add --append $env.PIPX_BIN_DIR
 
 # Deduplicate path entries
 $env.Path = ($env.Path | uniq)
+
+# Setup external completions (via carapace-bin)
+mkdir ~/.cache/carapace
+carapace _carapace nushell | save --force ~/.cache/carapace/init.nu

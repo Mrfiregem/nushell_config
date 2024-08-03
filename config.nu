@@ -27,6 +27,9 @@ $env.config = {
     }
 }
 
+# Load external completions (via carapace-bin)
+source ~/.cache/carapace/init.nu
+
 # Load platform-specific config
 const OS_CONFIG = if $nu.os-info.name == "windows" {
     'os-config/windows.nu'
