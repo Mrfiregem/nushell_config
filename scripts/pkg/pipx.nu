@@ -35,27 +35,32 @@ export def info [
     }
 }
 
+# Helper function for `search`
+def whereclass [class: string] {
+    where attributes.class == $class | first
+}
+
 # Search pypi for package names
 export def search [
     query: string # Pattern to compare names to
-    --exact(-e) # Find exact match rather than substring
 ] {
-    http get 'https://pypi.org/simple/'
-    | lines | polars into-df
-    | polars rename '0' raw
-    | polars filter-with ($in =~ '^<a')
-    | polars with-column --name 'name' (
-        $in.raw
-        | polars replace -p '<a href=".*">(.*)</a>' -r '$1'
-    ) | polars with-column --name 'url' (
-        $in.name
-        | polars replace -p '(.*)' -r 'https://pypi.org/project/$1/'
-    ) | polars drop 'raw'
-    | if $exact {
-        polars filter-with ((polars col name) == $query)
-    } else {
-        polars filter-with ($in.name | polars contains $query)
-    } | polars into-nu
+    http get $'https://pypi.org/search/?q=($query | url encode)'
+    | query web -q 'li>a.package-snippet' --as-html
+    | par-each { |s|
+        let xml = $s | from xml
+        let title = $xml.content
+            | where attributes.class == 'package-snippet__title'
+            | first
+
+        $xml
+        | {
+            name: ($title.content | whereclass 'package-snippet__name' | get content.0.content)
+            version: ($title.content | whereclass 'package-snippet__version' | get content.0.content)
+            url: $'https://pypi.org($in.attributes.href)'
+            description: ($in.content | whereclass 'package-snippet__description' | get content.0.content)
+            updated: ($title.content | whereclass 'package-snippet__created' | get content.0.attributes.datetime | into datetime)
+        }
+    }
 }
 
 # List installed packages
