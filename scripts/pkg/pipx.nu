@@ -1,3 +1,5 @@
+use listutils "compact column"
+
 # Get package info from pypi.org
 export def info [
     package: string # Name of the package to query
@@ -15,6 +17,7 @@ export def info [
         | if not $full {
             get info
             | reject ...$rejections
+            | compact column
         } else {}
     } catch {
         if $error {
