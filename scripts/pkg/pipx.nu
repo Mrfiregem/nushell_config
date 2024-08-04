@@ -45,7 +45,13 @@ export def search [
     query: string # Search keyword
     ...queries: string # Additional keywords to search by
     --last-updated(-l) # Sort results by recently updated instead of relevance
+    --page(-p): int = 1 # Get specific page
 ] {
+    # Make sure command exists
+    if not ('query' in (plugin list).name) {
+        error make -u {msg: "This command requires the 'query' plugin."}
+    }
+
     # Build search query
     let url = {
         scheme: 'https'
@@ -54,6 +60,7 @@ export def search [
         query: ({
             q: ($query | append $queries | str join ' ')
             o: (if $last_updated { "-created" } else "")
+            page: $page
         } | url build-query)
     } | url join
 
