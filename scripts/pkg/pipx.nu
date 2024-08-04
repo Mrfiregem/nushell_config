@@ -38,15 +38,20 @@ export def search [
     --exact(-e) # Find exact match rather than substring
 ] {
     http get 'https://pypi.org/simple/'
-    | lines
-    | filter {|s| $s | str starts-with '<a' }
-    | polars into-df
-    | polars rename '0' 'name'
-    | polars replace -p `^<a href=".*">(.*)</a>` -r '$1'
+    | lines | polars into-df
+    | polars rename '0' raw
+    | polars filter-with ($in =~ '^<a')
+    | polars with-column --name 'name' (
+        $in.raw
+        | polars replace -p '<a href=".*">(.*)</a>' -r '$1'
+    ) | polars with-column --name 'url' (
+        $in.name
+        | polars replace -p '(.*)' -r 'https://pypi.org/project/$1/'
+    ) | polars drop 'raw'
     | if $exact {
         polars filter-with ((polars col name) == $query)
     } else {
-        polars filter-with ($in | polars contains $query)
+        polars filter-with ($in.name | polars contains $query)
     } | polars into-nu
 }
 
