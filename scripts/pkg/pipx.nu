@@ -3,8 +3,8 @@ use listutils "compact column"
 # Get package info from pypi.org
 export def info [
     package: string # Name of the package to query
-    --full # Return full API response
-    --error # If a package isn't found, throw an error
+    --full(-f) # Return full API response
+    --error(-e) # If a package isn't found, throw an error
 ] {
     let rejections = [
         description
@@ -42,24 +42,33 @@ def whereclass [class: string] {
 
 # Search pypi for package names
 export def search [
-    query: string # Pattern to compare names to
+    query: string # Search keyword
+    ...queries: string # Additional keywords to search by
+    --last-updated(-l) # Sort results by recently updated instead of relevance
 ] {
-    http get $'https://pypi.org/search/?q=($query | url encode)'
-    | query web -q 'li>a.package-snippet' --as-html
-    | par-each { |s|
-        let xml = $s | from xml
-        let title = $xml.content
-            | where attributes.class == 'package-snippet__title'
-            | first
+    # Build search query
+    let url = {
+        scheme: 'https'
+        host: 'pypi.org'
+        path: '/search/'
+        query: ({
+            q: ($query | append $queries | str join ' ')
+            o: (if $last_updated { "-created" } else "")
+        } | url build-query)
+    } | url join
 
-        $xml
-        | {
-            name: ($title.content | whereclass 'package-snippet__name' | get content.0.content)
-            version: ($title.content | whereclass 'package-snippet__version' | get content.0.content)
-            url: $'https://pypi.org($in.attributes.href)'
-            description: ($in.content | whereclass 'package-snippet__description' | get content.0.content)
-            updated: ($title.content | whereclass 'package-snippet__created' | get content.0.attributes.datetime | into datetime)
-        }
+    try {
+        http get $url
+        | query web -q 'li>a.package-snippet'
+        | par-each {
+            str trim | compact -e
+            | rotate --ccw name version updated description
+            | default '' description
+            | update updated { into datetime }
+        } | flatten
+        | move updated --after description
+    } catch {
+        return []
     }
 }
 
