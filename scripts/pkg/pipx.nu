@@ -17,7 +17,7 @@ export def info [
         | if not $full {
             get info
             | reject ...$rejections
-            | compact column
+            | compact column --empty
         } else {}
     } catch {
         if $error {
