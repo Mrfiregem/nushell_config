@@ -46,3 +46,22 @@ export def "update items" [
 
 # Output tables similar to Powershell's "Format-List"
 export def out-list []: any -> nothing { each { print } | ignore }
+
+# Print `tldr` page examples as a table
+export def usage [cmd: string, --no-ansi(-A), --update(-u)] {
+    if $update {
+        ^tldr -u --raw $cmd
+    } else {
+        ^tldr --raw $cmd
+    } | lines | compact -e
+    | skip until { str starts-with '- ' }
+    | chunks 2 | each { str join ' ' }
+    | parse '- {desc}: `{example}`'
+    | update example {
+        str replace -a '{{' (ansi u) # Underline shown for user input
+        | str replace -a '}}' (ansi reset) # Turn off underline
+        | str replace -r '^(\w\S*)' $'(ansi bo)$1(ansi reset)' # Make first word (usually command) bold
+        | str replace -ar ' (-{1,2}\S+)' $' (ansi d)$1(ansi reset)' # Make cli flags dim
+    } | if $no_ansi { update example { ansi strip } } else {}
+    | move desc --after example
+}
