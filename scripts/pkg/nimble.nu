@@ -13,6 +13,13 @@ export def get-config [] {
     return {
         home: ($env.NIMBLE_DIR? | default ($nu.home-path | path join '.nimble'))
         tasks: (get-tasks)
+        paths: {
+            nim: (which 'nim' | first).path
+            nimble: (which 'nimble' | first).path
+            nimpretty: (which 'nimpretty' | first).path
+            nimsuggest: (which 'nimsuggest' | first).path
+            nimgrep: (which 'nimgrep' | first).path
+        }
     }
 }
 
