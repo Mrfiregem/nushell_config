@@ -19,37 +19,58 @@ export def list [query?: string] {
 export def search [
     query: string = '' # Package name to search for
     --force-default (-f) # Use default 'scoop search' even if scoop-search is installed
+    --force-file (-F) # Use builtin nu functions to search for packages
 ] {
-    if ((not $force_default) and (which scoop-search | into record | is-not-empty)) {
-        ^scoop-search.exe $query | lines
-        | str trim | split list '' | each { |lst|
-            {
-                source: ($lst.0 | str replace -r `^'([^']+)' bucket:` `$1`)
-                pkgs: (
-                    $lst | range 1..
-                    | parse -r `(?P<name>\S+) \((?P<version>\S+)\)(?: --> includes '(?P<binaries>[^']+))?`
-                )
+    let scoop_search_path = which "scoop-search" | get 0?.path
+    if (not $force_default) {
+        if ($scoop_search_path | is-not-empty) and (not $force_file) {
+            ^$scoop_search_path $query | lines
+            | str trim | split list '' | each { |lst|
+                {
+                    source: ($lst.0 | str replace -r `^'([^']+)' bucket:` `$1`)
+                    pkgs: (
+                        $lst | range 1..
+                        | parse -r `(?P<name>\S+) \((?P<version>\S+)\)(?: --> includes '(?P<binaries>[^']+))?`
+                    )
+                }
+            } | flatten --all
+            | move source --after version
+        } else {
+            let regex = ['(?i)' $query] | str join
+
+            glob ~/scoop/buckets/*/bucket/*.json
+            | par-each { |it|
+                let meta = open $it
+                {
+                    name: ($it | path parse).stem
+                    version: $meta.version
+                    source: ($it | path dirname -n 2 | path basename)
+                    binaries: ($meta.bin? | default '')
+                }
+            } | filter { |it|
+                let cond1 = $it.name =~ $query
+                let cond2 = $it.binaries | flatten --all | any {|s| $s =~ $query }
+                $cond1 or $cond2
             }
-        } | flatten --all
-        | move source --after version
+        }
     } else {
         let cmd = [
-            $"scoop search ($query) 6>$null",
-            'ForEach-Object {
-                Add-Member -Name Version -Value $_.Version.GetString() `
-                -MemberType NoteProperty -InputObject $_ -PassThru -Force
-            }',
-            'ConvertTo-Json'
-        ]
-        ^pwsh -NoProfile -Command ($cmd | str join ' | ')
-        | from json | rename -b { str downcase }
-        | move version source binaries --after name
-        | update binaries { split row ' | ' | compact -e }
+        $"scoop search ($query) 6>$null",
+        'ForEach-Object {
+        Add-Member -Name Version -Value $_.Version.GetString() `
+        -MemberType NoteProperty -InputObject $_ -PassThru -Force
+        }',
+        'ConvertTo-Json'
+    ]
+    ^pwsh -NoProfile -Command ($cmd | str join ' | ')
+    | from json | rename -b { str downcase }
+    | move version source binaries --after name
+    | update binaries { split row ' | ' | compact -e }
     }
-}
+    }
 
-# Show information for a specific package
-export def info [name: string] {
+    # Show information for a specific package
+    export def info [name: string] {
     let cmd = ^pwsh -NoProfile -Command $"scoop info ($name) 6>NUL | ConvertTo-Json" | complete
 
     if $cmd.exit_code > 0 {
