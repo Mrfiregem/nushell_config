@@ -65,3 +65,18 @@ export def usage [cmd: string, --no-ansi(-A), --update(-u)] {
     } | if $no_ansi { update example { ansi strip } } else {}
     | move desc --after example
 }
+
+# Take a 1D list and convert it to a record
+def "create record" [...columns: string]: list<any> -> record {
+    let list = $in
+    mut result = {}
+    let c_len = $columns | length
+    let max_len = if $c_len > 0 { $c_len } else ($list | length)
+
+    for n in (seq 0 ($max_len - 1)) {
+        let name = if $c_len > 0 { $columns | get $n } else $'item($n)'
+        $result = ($result | insert $name { $list | get $n })
+    }
+
+    return $result
+}
