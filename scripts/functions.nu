@@ -67,7 +67,7 @@ export def usage [cmd: string, --no-ansi(-A), --update(-u)] {
 }
 
 # Take a 1D list and convert it to a record
-def "create record" [...columns: string]: list<any> -> record {
+export def "create record" [...columns: string]: list<any> -> record {
     let list = $in
     mut result = {}
     let c_len = $columns | length
