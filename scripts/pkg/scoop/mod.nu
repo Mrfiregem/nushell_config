@@ -1,4 +1,5 @@
 use listutils/tables.nu "compact column"
+use functions.nu "create record"
 
 # === Package data commands ===
 
@@ -36,21 +37,27 @@ export def search [
             } | flatten --all
             | move source --after version
         } else {
-            let regex = ['(?i)' $query] | str join
+            let regex = ['(?i)', $query] | str join
 
-            glob ~/scoop/buckets/*/bucket/*.json
+            glob '~/scoop/buckets/*/bucket/*.json'
             | par-each { |it|
                 let meta = open $it
                 {
                     name: ($it | path parse).stem
                     version: $meta.version
                     source: ($it | path dirname -n 2 | path basename)
-                    binaries: ($meta.bin? | default '')
+                    binaries: ($meta.bin? | tee {} )
                 }
             } | filter { |it|
-                let cond1 = $it.name =~ $query
-                let cond2 = $it.binaries | flatten --all | any {|s| $s =~ $query }
+                let cond1 = $it.name =~ $regex
+                let cond2 = $it.binaries | default '' | flatten --all | path basename | any {|s| $s =~ $regex }
                 $cond1 or $cond2
+            } | update binaries {
+                each { |i|
+                    if ($i | describe | str starts-with 'list') {
+                        create record path name
+                    } else {}
+                }
             }
         }
     } else {
@@ -61,8 +68,8 @@ export def search [
         -MemberType NoteProperty -InputObject $_ -PassThru -Force
         }',
         'ConvertTo-Json'
-    ]
-    ^pwsh -NoProfile -Command ($cmd | str join ' | ')
+    ] | str join ' | '
+    ^pwsh -NoProfile -Command ($cmd)
     | from json | rename -b { str downcase }
     | move version source binaries --after name
     | update binaries { split row ' | ' | compact -e }
